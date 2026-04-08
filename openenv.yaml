@@ -65,17 +65,13 @@ reward:
 
 tasks:
   - id: easy-apply-ignore-001
-    difficulty: easy
-    objective: classify apply or ignore for one backend internship
-    grader: easy_grader
+    grader: env.graders.easy_grader
+
   - id: medium-relevance-001
-    difficulty: medium
-    objective: estimate calibrated score and decision with partial skill mismatch
-    grader: medium_grader
+    grader: env.graders.medium_grader
+
   - id: hard-ranking-001
-    difficulty: hard
-    objective: rank cross-domain internships and decide on top-ranked role
-    grader: hard_grader
+    grader: env.graders.hard_grader
 
 runtime:
   entrypoint: inference.py

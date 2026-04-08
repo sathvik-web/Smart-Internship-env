@@ -1,12 +1,11 @@
 ---
 
-title: Smart Internship Env
-emoji: 🏃
-colorFrom: yellow
-colorTo: red
-sdk: docker
+title: "Smart Internship Env"
+colorFrom: "yellow"
+colorTo: "red"
+sdk: "docker"
 sdk_version: "latest"
-app_file: app.py
+app_file: "app.py"
 pinned: false
 -------------
 
@@ -21,7 +20,7 @@ https://huggingface.co/spaces/sathvik1890/smart-internship-env
 SmartInternshipEnv is a real-world OpenEnv environment that simulates internship recommendation based on student skills.
 It evaluates an AI agent’s ability to make decisions such as applying, assigning relevance scores, and ranking multiple internship opportunities.
 
-This environment is designed for **agent evaluation, decision-making, and reward-based learning**, similar to real-world job recommendation systems.
+This environment is designed for agent evaluation, decision-making, and reward-based learning, similar to real-world job recommendation systems.
 
 ---
 
@@ -55,9 +54,9 @@ This environment is designed for **agent evaluation, decision-making, and reward
 
 The environment includes three deterministic tasks:
 
-* **Easy** → classification (apply / ignore)
-* **Medium** → relevance scoring (0.0 to 1.0)
-* **Hard** → ranking multiple internships
+* Easy → classification (apply / ignore)
+* Medium → relevance scoring (0.0 to 1.0)
+* Hard → ranking multiple internships
 
 Tasks increase in complexity and simulate real-world decision-making.
 
@@ -65,16 +64,14 @@ Tasks increase in complexity and simulate real-world decision-making.
 
 ## Reward Design
 
-* Reward is normalized in **[0, 1]**
-* Provides **partial credit**
+* Reward is normalized in [0, 1]
+* Provides partial credit
 * Evaluates:
 
   * decision correctness
   * score calibration
   * ranking accuracy (hard task)
   * reasoning quality
-
-This ensures meaningful feedback across the full trajectory.
 
 ---
 
@@ -90,9 +87,9 @@ The environment includes a baseline inference script using the OpenAI client.
 [END] success=... steps=... score=... rewards=...
 ```
 
-✔ Rewards formatted to 2 decimals
-✔ Scores normalized between 0 and 1
-✔ Deterministic and reproducible
+* Rewards formatted to 2 decimals
+* Scores normalized between 0 and 1
+* Deterministic and reproducible
 
 ---
 
@@ -124,7 +121,7 @@ docker run smart-internship-env
 
 ## Deployment
 
-The environment is deployed on Hugging Face Spaces using Docker and FastAPI, ensuring a live and accessible endpoint.
+The environment is deployed on Hugging Face Spaces using Docker and FastAPI.
 
 ---
 
@@ -141,4 +138,4 @@ The environment is deployed on Hugging Face Spaces using Docker and FastAPI, ens
 
 ## Outcome
 
-This project demonstrates the design of an AI evaluation system where agents can be tested on realistic decision-making scenarios involving classification, scoring, and ranking.
+This project demonstrates an AI evaluation system where agents are tested on realistic decision-making scenarios involving classification, scoring, and ranking.

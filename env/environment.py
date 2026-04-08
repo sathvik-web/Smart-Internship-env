@@ -23,9 +23,22 @@ class InternshipEnv:
             internship_options=task.internship_options,
         )
 
-    def reset(self) -> Observation:
-        self.current_index = 0
+    # ✅ FIXED RESET (proper indentation + logic)
+    def reset(self, task: str = None) -> Observation:
         self.last_reward = 0.0
+
+        if task is not None:
+            found = False
+            for i, t in enumerate(self.tasks):
+                if t.task_id == task:
+                    self.current_index = i
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f"Task {task} not found")
+        else:
+            self.current_index = 0
+
         return self._task_to_observation(self.tasks[self.current_index])
 
     def step(self, action):

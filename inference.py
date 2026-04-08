@@ -7,7 +7,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "baseline-model")
 def run_task(env, task_id):
     print(f"[START] task={task_id} env=SmartInternshipEnv model={MODEL_NAME}")
 
-    obs = env.reset()
+    obs = env.reset(task=task_id)
     done = False
     step_count = 0
     rewards = []

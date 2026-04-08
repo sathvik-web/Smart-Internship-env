@@ -12,6 +12,19 @@ def root():
     return {"message": "SmartInternshipEnv is running"}
 
 
+@app.get("/tasks")
+def tasks():
+    task_list = getattr(env, "_tasks", getattr(env, "tasks", []))
+    return [
+        {
+            "task_id": task.task_id,
+            "difficulty": task.difficulty,
+            "grader": callable(getattr(task, "grader", None)),
+        }
+        for task in task_list
+    ]
+
+
 @app.post("/reset")
 @app.get("/reset")
 def reset():

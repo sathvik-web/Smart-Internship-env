@@ -1,0 +1,79 @@
+name: SmartInternshipEnv
+version: 1.0.0
+description: >
+  OpenEnv internship recommendation environment with deterministic grading
+  for classification, score calibration, and ranking tasks.
+
+metadata:
+  domain: internship-recommendation
+  deterministic: true
+  runtime_target: low-resource
+  author: SmartInternshipEnv
+  difficulty_levels:
+    - easy
+    - medium
+    - hard
+
+environment:
+  module: env.environment
+  class: InternshipEnv
+  interface:
+    reset:
+      returns: Observation
+    step:
+      params:
+        - Action
+      returns:
+        - Observation
+        - reward_float
+        - done_bool
+        - info_dict
+    state:
+      returns: state_dict
+
+observations:
+  type: object
+  fields:
+    task_id: string
+    difficulty: enum[easy, medium, hard]
+    objective: string
+    internship_title: string
+    description: string
+    required_skills: list[string]
+    student_skills: list[string]
+    internship_options: list[object]
+
+actions:
+  type: object
+  fields:
+    decision: enum[apply, ignore]
+    relevance_score: float[0.0,1.0]
+    ranking: list[string]
+    reasoning: string
+
+reward:
+  type: float
+  range: [0.0, 1.0]
+  deterministic: true
+  components:
+    - decision_correctness
+    - score_closeness
+    - reasoning_keyword_coverage
+    - ranking_pairwise_accuracy_for_hard_task
+    - progress_bonus
+    - penalties_for_wrong_or_overconfident_outputs
+
+tasks:
+  - id: easy-apply-ignore-001
+    difficulty: easy
+    objective: classify apply or ignore for one backend internship
+  - id: medium-relevance-001
+    difficulty: medium
+    objective: estimate calibrated score and decision with partial skill mismatch
+  - id: hard-ranking-001
+    difficulty: hard
+    objective: rank cross-domain internships and decide on top-ranked role
+
+runtime:
+  entrypoint: inference.py
+  max_steps: 16

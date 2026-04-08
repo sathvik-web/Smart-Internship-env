@@ -1,4 +1,5 @@
 ---
+
 title: Smart Internship Env
 emoji: 🏃
 colorFrom: yellow
@@ -7,133 +8,137 @@ sdk: docker
 sdk_version: "latest"
 app_file: app.py
 pinned: false
----
+-------------
 
 # SmartInternshipEnv
 
-SmartInternshipEnv is a deterministic OpenEnv environment for internship recommendation and ranking based on student skills.
+## Live Demo
 
-It is designed to be submission-ready for OpenEnv evaluation and deployment-ready for Hugging Face Spaces (Docker).
+https://huggingface.co/spaces/sathvik1890/smart-internship-env
 
-## Environment Summary
+## Overview
 
-Core interface (`env/environment.py`):
+SmartInternshipEnv is a real-world OpenEnv environment that simulates internship recommendation based on student skills.
+It evaluates an AI agent’s ability to make decisions such as applying, assigning relevance scores, and ranking multiple internship opportunities.
 
-- `reset() -> Observation`
-- `step(action: Action) -> (Observation, reward, done, info)`
-- `state() -> dict`
+This environment is designed for **agent evaluation, decision-making, and reward-based learning**, similar to real-world job recommendation systems.
 
-Typed models (`env/models.py`):
+---
 
-- `Observation`
-- `Action`
-- `Reward`
+## Tech Stack
 
-## Task Design
+* Python
+* OpenEnv
+* FastAPI
+* Docker
+* Hugging Face Spaces
+
+---
+
+## Environment Design
+
+### Core API
+
+* `reset()` → returns initial observation
+* `step(action)` → returns observation, reward, done, info
+* `state()` → returns current state
+
+### Models
+
+* `Observation` → internship + student details
+* `Action` → decision, score, ranking, reasoning
+* `Reward` → normalized score
+
+---
+
+## Tasks
 
 The environment includes three deterministic tasks:
 
-1. Easy: classification (`apply` vs `ignore`)
-2. Medium: nuanced relevance scoring in `[0.0, 1.0]`
-3. Hard: ranking multiple internships across different domains
+* **Easy** → classification (apply / ignore)
+* **Medium** → relevance scoring (0.0 to 1.0)
+* **Hard** → ranking multiple internships
 
-The hard task is graded with pairwise ranking correctness.
+Tasks increase in complexity and simulate real-world decision-making.
+
+---
 
 ## Reward Design
 
-Reward is always normalized to `[0, 1]` and includes:
+* Reward is normalized in **[0, 1]**
+* Provides **partial credit**
+* Evaluates:
 
-- partial credit for close relevance scores
-- decision correctness signal
-- reasoning quality via deterministic keyword matching
-- ranking quality for the hard task
-- progress bonus across episode steps
-- penalties for wrong decisions and poor calibration/reasoning
+  * decision correctness
+  * score calibration
+  * ranking accuracy (hard task)
+  * reasoning quality
 
-## Inference Logging Format
+This ensures meaningful feedback across the full trajectory.
 
-`inference.py` prints strict logs:
+---
 
-- `[START] task=... env=... model=...`
-- `[STEP] step=... action=... reward=... done=... error=...`
-- `[END] success=... steps=... score=... rewards=...`
+## Inference
 
-Formatting guarantees:
+The environment includes a baseline inference script using the OpenAI client.
 
-- `reward` uses exactly 2 decimals
-- `score` uses exactly 2 decimals
-- `done` and `success` are lowercase booleans (`true`/`false`)
-- `error=null` when no runtime error
-- `rewards` is comma-separated with no brackets
+### Log Format
 
-Example:
-
-```text
-[START] task=all env=SmartInternshipEnv model=gpt-4o-mini
-[STEP] step=1 action={...} reward=0.78 done=false error=null
-[STEP] step=2 action={...} reward=0.73 done=false error=null
-[STEP] step=3 action={...} reward=0.87 done=true error=null
-[END] success=true steps=3 score=0.79 rewards=0.78,0.73,0.87
+```
+[START] task=... env=... model=...
+[STEP] step=... action=... reward=... done=... error=...
+[END] success=... steps=... score=... rewards=...
 ```
 
-## Packaging and Validation
+✔ Rewards formatted to 2 decimals
+✔ Scores normalized between 0 and 1
+✔ Deterministic and reproducible
 
-The project includes OpenEnv packaging requirements:
+---
 
-- `pyproject.toml` includes `openenv-core>=0.2.0`
-- script entrypoint:
-  - `server = "server.app:main"`
-- `server/app.py` defines callable `main()`
-- `env/__init__.py` defines `env` as a proper package
-
-Lockfile support:
-
-```bash
-uv lock
-```
-
-## Local Run
-
-Install dependencies:
+## Run Locally
 
 ```bash
 pip install -r requirements.txt
-```
-
-Set environment variables (Windows):
-
-```bash
-set API_BASE_URL=https://api.openai.com/v1
-set MODEL_NAME=gpt-4o-mini
-set HF_TOKEN=your_token_here
-```
-
-Run inference:
-
-```bash
 python inference.py
 ```
 
-Validate OpenEnv package:
+---
+
+## Validation
 
 ```bash
 openenv validate
 ```
 
-## Docker / Hugging Face Spaces
+---
 
-Build image:
+## Docker
 
 ```bash
 docker build -t smart-internship-env .
+docker run smart-internship-env
 ```
 
-Run container:
+---
 
-```bash
-docker run --rm \
-  -e API_BASE_URL=https://api.openai.com/v1 \
-  -e MODEL_NAME=gpt-4o-mini \
-  -e HF_TOKEN=your_token_here \
-  smart-internship-env
-```
+## Deployment
+
+The environment is deployed on Hugging Face Spaces using Docker and FastAPI, ensuring a live and accessible endpoint.
+
+---
+
+## Features
+
+* Real-world task simulation
+* Deterministic grading
+* Multi-step decision evaluation
+* Reward shaping with partial signals
+* OpenEnv compliant
+* Fully deployed and reproducible
+
+---
+
+## Outcome
+
+This project demonstrates the design of an AI evaluation system where agents can be tested on realistic decision-making scenarios involving classification, scoring, and ranking.

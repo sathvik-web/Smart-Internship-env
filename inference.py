@@ -6,7 +6,6 @@ from typing import Any
 
 from dotenv import load_dotenv
 from openai import OpenAI
-from pydantic import ValidationError
 
 from env.environment import InternshipEnv
 from env.models import Action, Observation
@@ -103,7 +102,7 @@ def main() -> int:
     step_idx = 0
     success = True
 
-    # ✅ USE VALIDATOR PROXY
+    # USE VALIDATOR PROXY
     try:
         client = OpenAI(
             base_url=os.environ["API_BASE_URL"],
@@ -112,7 +111,7 @@ def main() -> int:
     except Exception:
         client = None
 
-    # ✅ CRITICAL FIX: FORCE ONE SUCCESSFUL CALL
+    # CRITICAL FIX: FORCE ONE SUCCESSFUL CALL
     try:
         if client is not None:
             client.chat.completions.create(

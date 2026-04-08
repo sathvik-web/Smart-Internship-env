@@ -41,8 +41,10 @@ def step(action: dict):
             "info": {"error": str(exc)},
         }
 
+
 def main():
     return InternshipEnv()
+
 
 if __name__ == "__main__":
     main()

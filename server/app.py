@@ -30,3 +30,6 @@ def step(action: dict):
 
 def main():
     return InternshipEnv()
+
+if __name__ == "__main__":
+    main()

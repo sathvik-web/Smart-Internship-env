@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from env.environment import InternshipEnv
 from env.models import Action
+from env.tasks import load_tasks
 
 app = FastAPI()
 
@@ -13,8 +14,9 @@ def root():
 
 
 @app.get("/tasks")
+@app.post("/tasks")
 def tasks():
-    task_list = getattr(env, "_tasks", getattr(env, "tasks", []))
+    task_list = load_tasks()
     return [
         {
             "task_id": task.task_id,

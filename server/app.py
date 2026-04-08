@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from env.environment import InternshipEnv
+from env.models import Action
 
 app = FastAPI()
 
@@ -15,14 +16,15 @@ def root():
 @app.get("/reset")
 def reset():
     observation = env.reset()
-    return {"observation": observation}
+    return {"observation": observation.model_dump(exclude={"grader"})}
 
 
 @app.post("/step")
 def step(action: dict):
-    observation, reward, done, info = env.step(action)
+    parsed_action = Action.model_validate(action)
+    observation, reward, done, info = env.step(parsed_action)
     return {
-        "observation": observation,
+        "observation": observation.model_dump(exclude={"grader"}),
         "reward": reward,
         "done": done,
         "info": info

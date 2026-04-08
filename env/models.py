@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from pydantic import ConfigDict
 from typing import Literal, Callable, Optional
 from pydantic import BaseModel, Field, field_validator
 
@@ -48,6 +48,8 @@ class Reward(BaseModel):
 
 
 class InternshipTask(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     task_id: str
     difficulty: Literal["easy", "medium", "hard"]
     objective: str

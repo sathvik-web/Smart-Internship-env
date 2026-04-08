@@ -17,9 +17,10 @@ class InternshipEnv:
 
         progress_ratio = self.current_index / len(self.tasks)
 
-        # CRITICAL FIX
         if not callable(task.grader):
-               raise ValueError("Grader missing")
+            raise ValueError("Grader missing")
+
+        # ✅ RETURNS FLOAT
         reward = task.grader(action, task, progress_ratio)
 
         self.current_index += 1
@@ -27,7 +28,7 @@ class InternshipEnv:
 
         next_obs = None if done else self.tasks[self.current_index]
 
-        return next_obs, reward.total, done, {"feedback": reward.feedback}
+        return next_obs, reward, done, {}
 
     def state(self):
         return {"current_index": self.current_index}

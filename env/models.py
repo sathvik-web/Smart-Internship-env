@@ -63,4 +63,4 @@ class InternshipTask(BaseModel):
     correct_ranking: list[str] = Field(default_factory=list)
 
     # REQUIRED FOR VALIDATOR
-    grader: Callable[[Action, "InternshipTask", float], Reward]
+    grader: Callable

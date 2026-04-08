@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 from env.models import InternshipOption, InternshipTask
-from env.reward import compute_reward
 
 
-# ✅ SIMPLE WRAPPER GRADERS (VERY IMPORTANT)
-def easy_grader(action, task, progress):
-    return compute_reward(action, task, progress).total
+# ✅ VALIDATOR-COMPATIBLE GRADERS
+def easy_grader(state):
+    return float(state.get("last_reward", 0.0))
 
 
-def medium_grader(action, task, progress):
-    return compute_reward(action, task, progress).total
+def medium_grader(state):
+    return float(state.get("last_reward", 0.0))
 
 
-def hard_grader(action, task, progress):
-    return compute_reward(action, task, progress).total
+def hard_grader(state):
+    return float(state.get("last_reward", 0.0))
 
 
 def load_tasks() -> list[InternshipTask]:
@@ -30,7 +29,6 @@ def load_tasks() -> list[InternshipTask]:
         correct_decision="apply",
         true_score=0.74,
         expected_reasoning_keywords=["python", "backend"],
-        grader=easy_grader,   # ✅ FIXED
     )
 
     medium_task = InternshipTask(
@@ -44,7 +42,6 @@ def load_tasks() -> list[InternshipTask]:
         correct_decision="apply",
         true_score=0.61,
         expected_reasoning_keywords=["mlops", "docker"],
-        grader=medium_grader,   # ✅ FIXED
     )
 
     hard_task = InternshipTask(
@@ -71,7 +68,6 @@ def load_tasks() -> list[InternshipTask]:
             ),
         ],
         correct_ranking=["ML Intern", "Backend Intern"],
-        grader=hard_grader,   # ✅ FIXED
     )
 
     return [easy_task, medium_task, hard_task]

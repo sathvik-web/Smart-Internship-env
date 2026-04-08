@@ -12,6 +12,11 @@ def root():
     return {"message": "SmartInternshipEnv is running"}
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.post("/reset")
 @app.get("/reset")
 def reset():
@@ -40,6 +45,15 @@ def step(action: dict):
             "done": True,
             "info": {"error": str(exc)},
         }
+
+
+@app.get("/state")
+@app.post("/state")
+def state():
+    try:
+        return env.state()
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 def main():

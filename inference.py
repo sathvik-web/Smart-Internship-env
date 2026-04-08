@@ -102,16 +102,17 @@ def main() -> int:
     step_idx = 0
     success = True
 
-    # USE VALIDATOR PROXY
+    # USE VALIDATOR PROXY — supports both API_KEY and HF_TOKEN
     try:
+        api_key = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN", "")
         client = OpenAI(
             base_url=os.environ["API_BASE_URL"],
-            api_key=os.environ["API_KEY"],
+            api_key=api_key,
         )
     except Exception:
         client = None
 
-    # CRITICAL FIX: FORCE ONE SUCCESSFUL CALL
+    # FORCE ONE SUCCESSFUL CALL to verify connectivity
     try:
         if client is not None:
             client.chat.completions.create(

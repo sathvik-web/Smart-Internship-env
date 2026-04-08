@@ -2,7 +2,6 @@ from __future__ import annotations
 from pydantic import ConfigDict
 from typing import Literal, Callable, Optional
 from pydantic import BaseModel, Field, field_validator
-from typing import Callable
 
 class InternshipOption(BaseModel):
     internship_title: str
@@ -64,4 +63,4 @@ class InternshipTask(BaseModel):
     correct_ranking: list[str] = Field(default_factory=list)
 
     # REQUIRED FOR VALIDATOR
-grader: Callable[[Action, "InternshipTask", float], Reward]
+    grader: Callable[[Action, "InternshipTask", float], Reward]

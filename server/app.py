@@ -15,20 +15,31 @@ def root():
 @app.post("/reset")
 @app.get("/reset")
 def reset():
-    observation = env.reset()
-    return {"observation": observation.model_dump(exclude={"grader"})}
+    try:
+        observation = env.reset()
+        return {"observation": observation.model_dump(exclude={"grader"})}
+    except Exception as exc:
+        return {"observation": None, "error": str(exc)}
 
 
 @app.post("/step")
 def step(action: dict):
-    parsed_action = Action.model_validate(action)
-    observation, reward, done, info = env.step(parsed_action)
-    return {
-        "observation": observation.model_dump(exclude={"grader"}),
-        "reward": reward,
-        "done": done,
-        "info": info
-    }
+    try:
+        parsed_action = Action.model_validate(action)
+        observation, reward, done, info = env.step(parsed_action)
+        return {
+            "observation": None if observation is None else observation.model_dump(exclude={"grader"}),
+            "reward": reward,
+            "done": done,
+            "info": info,
+        }
+    except Exception as exc:
+        return {
+            "observation": None,
+            "reward": 0.0,
+            "done": True,
+            "info": {"error": str(exc)},
+        }
 
 def main():
     return InternshipEnv()

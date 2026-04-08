@@ -97,15 +97,13 @@ def _model_action(client: OpenAI, model_name: str, observation: Observation) -> 
 def main() -> int:
     load_dotenv()
 
-    # ✅ REQUIRED VARIABLES
-    api_base_url = os.environ["API_BASE_URL"]
-    model_name = os.getenv("MODEL_NAME", "gpt-4o-mini")
-    hf_token = os.environ["HF_TOKEN"]
+    #  REQUIRED VARIABLES
+    model_name = os.environ.get("MODEL_NAME", "gpt-4o-mini")
 
-    # ✅ CRITICAL: MUST USE THEIR PROXY
+    #  CRITICAL: MUST USE THEIR PROXY
     client = OpenAI(
-        base_url=api_base_url,
-        api_key=hf_token,
+        base_url=os.environ["API_BASE_URL"],
+        api_key=os.environ["API_KEY"],
     )
 
     env = InternshipEnv()

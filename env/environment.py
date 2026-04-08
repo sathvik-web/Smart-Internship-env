@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from env.models import Observation
 from env.tasks import load_tasks
 
@@ -6,7 +7,6 @@ from env.tasks import load_tasks
 class InternshipEnv:
     def __init__(self):
         self.tasks = load_tasks()
-        self._tasks = self.tasks
         self.current_index = 0
 
     def _task_to_observation(self, task) -> Observation:

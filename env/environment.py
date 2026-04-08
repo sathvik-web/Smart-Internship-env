@@ -18,6 +18,8 @@ class InternshipEnv:
         progress_ratio = self.current_index / len(self.tasks)
 
         # CRITICAL FIX
+        if not callable(task.grader):
+               raise ValueError("Grader missing")
         reward = task.grader(action, task, progress_ratio)
 
         self.current_index += 1

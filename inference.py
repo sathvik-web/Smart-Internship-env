@@ -109,7 +109,7 @@ def main() -> int:
 
 	api_base_url = os.getenv("API_BASE_URL", "").strip()
 	model_name = os.getenv("MODEL_NAME", "gpt-4o-mini").strip()
-	hf_token = os.getenv("HF_TOKEN", "").strip()
+	hf_token = os.getenv("HF_TOKEN")
 
 	env = InternshipEnv()
 	observation = env.reset()

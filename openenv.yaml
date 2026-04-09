@@ -65,13 +65,13 @@ reward:
 
 tasks:
   - id: easy-apply-ignore-001
-    grader: env.graders.easy_grader
+    grader: env.easy_grader
 
   - id: medium-relevance-001
-    grader: env.graders.medium_grader
+    grader: env.medium_grader
 
   - id: hard-ranking-001
-    grader: env.graders.hard_grader
+    grader: env.hard_grader
 
 runtime:
   entrypoint: inference.py

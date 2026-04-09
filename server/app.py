@@ -3,6 +3,8 @@ from env.environment import InternshipEnv
 from env.models import Action
 from env.tasks import load_tasks
 
+print(" SERVER.APP LOADED WITH TASKS ROUTE")
+
 app = FastAPI()
 
 env = InternshipEnv()
@@ -61,8 +63,9 @@ def state():
 @app.post("/tasks")
 def tasks():
     tasks = load_tasks()
-    print(len(tasks))
-    print([callable(getattr(t, "grader", None)) for t in tasks])
+    print(" TASKS LOADED:", len(tasks))
+    print(" GRADER FLAGS:", [callable(getattr(t, "grader", None)) for t in tasks])
+
     return [
         {
             "task_id": task.task_id,
@@ -71,6 +74,15 @@ def tasks():
         }
         for task in tasks
     ]
+
+
+print(" TASKS ROUTE REGISTERED")
+
+
+# DEBUG ROUTES (CRITICAL)
+@app.get("/debug-routes")
+def debug_routes():
+    return [route.path for route in app.routes]
 
 
 def main():

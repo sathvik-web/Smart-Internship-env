@@ -1,5 +1,6 @@
 FROM python:3.10
-
+# force rebuild
+RUN echo "rebuild trigger"
 WORKDIR /app
 
 COPY requirements.txt ./

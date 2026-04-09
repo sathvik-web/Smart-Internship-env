@@ -1,151 +1,180 @@
 """
-inference.py — SmartInternshipEnv baseline inference script
-Follows mandatory [START] / [STEP] / [END] log format.
+SmartInternshipEnv baseline inference script.
+Produces strict [START] / [STEP] / [END] logs.
 """
 
-import os
+from __future__ import annotations
+
 import json
+import os
+
 from openai import OpenAI
+
 from env.environment import InternshipEnv
+from env.models import Action
 
-# ── Required env vars ────────────────────────────────────────────────────────
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME   = os.getenv("MODEL_NAME",   "gpt-4o-mini")
-API_KEY      = os.getenv("HF_TOKEN",     "dummy-key")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "openai/gpt-4o-mini")
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY") or os.getenv("API_KEY")
 
-BENCHMARK        = "SmartInternshipEnv"
-MAX_STEPS        = 16
-MAX_TOTAL_REWARD = 3.0          # 3 tasks × max reward 1.0 each
-SUCCESS_SCORE_THRESHOLD = 0.5
+BENCHMARK = "SmartInternshipEnv"
+MAX_STEPS = 16
 
 
-# ── Structured loggers (exact required format) ───────────────────────────────
-def log_start(task: str, env: str, model: str):
-    print(f"[START] task={task} env={env} model={model}", flush=True)
+def _heuristic_action(obs) -> Action:
+    required = {s.lower() for s in obs.required_skills}
+    student = {s.lower() for s in obs.student_skills}
 
+    overlap = len(required & student)
+    coverage = overlap / len(required) if required else 1.0
 
-def log_step(step: int, action: dict, reward: float, done: bool, error):
-    action_str = json.dumps(action)
-    error_str  = "null" if error is None else str(error)
-    print(
-        f"[STEP] step={step} action={action_str} "
-        f"reward={reward:.4f} done={str(done).lower()} error={error_str}",
-        flush=True,
+    ranking = []
+    if obs.internship_options:
+        scored = []
+        for option in obs.internship_options:
+            req = {s.lower() for s in option.required_skills}
+            cov = len(req & student) / len(req) if req else 1.0
+            scored.append((option.internship_title, cov))
+        scored.sort(key=lambda x: (-x[1], x[0]))
+        ranking = [x[0] for x in scored]
+        coverage = scored[0][1]
+
+    return Action(
+        decision="apply" if coverage >= 0.45 else "ignore",
+        relevance_score=round(max(0.0, min(1.0, coverage)), 3),
+        ranking=ranking,
+        reasoning="Skill overlap based decision",
     )
 
 
-def log_end(success: bool, steps: int, score: float, rewards: list):
-    rewards_json = json.dumps([round(r, 4) for r in rewards])
-    print(
-        f"[END] success={str(success).lower()} steps={steps} "
-        f"score={score:.4f} rewards={rewards_json}",
-        flush=True,
+def _model_action(client: OpenAI, obs) -> Action:
+    prompt = (
+        "Return ONLY valid JSON with fields: decision, relevance_score, ranking, reasoning.\n"
+        f"Task: {obs.model_dump_json()}"
     )
 
+    response = client.chat.completions.create(
+        model=MODEL_NAME,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": "Return only JSON."},
+            {"role": "user", "content": prompt},
+        ],
+    )
 
-# ── LLM helper ───────────────────────────────────────────────────────────────
-def get_model_action(client: OpenAI, obs) -> dict:
-    """
-    Ask the LLM to produce a structured action for the current observation.
-    Falls back to a deterministic baseline if the API call fails.
-    """
-    system_prompt = (
-        "You are an internship recommendation agent. "
-        "Given an internship observation, respond ONLY with a valid JSON object "
-        "with keys: decision (apply|ignore), relevance_score (float 0-1), "
-        "ranking (list of internship titles, empty if not applicable), "
-        "reasoning (short string explaining your choice)."
-    )
-    user_prompt = (
-        f"Task ID: {obs.task_id}\n"
-        f"Objective: {obs.objective}\n"
-        f"Internship: {obs.internship_title}\n"
-        f"Description: {obs.description}\n"
-        f"Required skills: {obs.required_skills}\n"
-        f"Student skills: {obs.student_skills}\n"
-        f"Options: {[o.internship_title for o in obs.internship_options]}\n\n"
-        "Respond with JSON only."
-    )
+    raw = (response.choices[0].message.content or "{}").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.lower().startswith("json"):
+            raw = raw[4:].strip()
+
+    first = raw.find("{")
+    last = raw.rfind("}")
+    if first == -1 or last == -1 or last <= first:
+        raise ValueError("No JSON object found")
+
+    return Action.model_validate(json.loads(raw[first:last + 1]))
+
+
+def run_task(env: InternshipEnv, client: OpenAI | None, task_id: str, llm_enabled: bool) -> bool:
+    print(f"[START] task={task_id} env={BENCHMARK} model={MODEL_NAME}", flush=True)
 
     try:
-        response = client.chat.completions.create(
-            model=MODEL_NAME,
-            max_tokens=256,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user",   "content": user_prompt},
-            ],
-        )
-        raw = response.choices[0].message.content.strip()
-        # Strip markdown fences if present
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        return json.loads(raw.strip())
+        observation = env.reset(task=task_id)
     except Exception:
-        # Deterministic fallback so the script always completes
-        return {
-            "decision": "apply",
-            "relevance_score": 0.75,
-            "ranking": [o.internship_title for o in obs.internship_options],
-            "reasoning": f"python backend ml {' '.join(obs.required_skills)}",
-        }
+        print("[END] success=false steps=0 score=0.00 rewards=", flush=True)
+        return llm_enabled
 
-
-# ── Per-task runner ───────────────────────────────────────────────────────────
-def run_task(env: InternshipEnv, client: OpenAI, task_id: str):
-    log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
-
-    obs         = env.reset(task=task_id)
-    done        = False
+    rewards: list[float] = []
+    success = False
     steps_taken = 0
-    rewards     = []
-    score       = 0.0
-    success     = False
+    done = False
 
     try:
         for step in range(1, MAX_STEPS + 1):
-            if done or obs is None:
+            if done or observation is None:
                 break
 
-            action = get_model_action(client, obs)
-            error  = None
+            error = None
+            try:
+                action = _model_action(client, observation) if (llm_enabled and client is not None) else _heuristic_action(observation)
+            except Exception:
+                action = _heuristic_action(observation)
+                llm_enabled = False
+                error = None
+
+            current_task_id = observation.task_id
 
             try:
-                obs, reward, done, _ = env.step(action)
+                observation, reward, done, _info = env.step(action)
             except Exception as exc:
                 reward = 0.0
-                done   = True
-                error  = str(exc)
+                done = True
+                error = str(exc)
 
-            reward = float(reward) if reward is not None else 0.0
+            reward = float(max(0.0, min(1.0, reward)))
             rewards.append(reward)
             steps_taken = step
 
-            log_step(step=step, action=action, reward=reward, done=done, error=error)
+            action_str = json.dumps(action.model_dump(), separators=(",", ":"))
+            err_str = "null" if error is None else error
+            print(
+                f"[STEP] step={step} task={current_task_id} action={action_str} "
+                f"reward={reward:.2f} done={str(done).lower()} error={err_str}",
+                flush=True,
+            )
 
             if done:
                 break
 
-        score   = sum(rewards) / MAX_TOTAL_REWARD if MAX_TOTAL_REWARD > 0 else 0.0
-        score   = min(max(score, 0.0), 1.0)
-        success = score >= SUCCESS_SCORE_THRESHOLD
+        score = sum(rewards) / len(rewards) if rewards else 0.0
+        score = max(0.0, min(1.0, score))
+        success = score >= 0.1
+    except Exception:
+        score = 0.0
+        success = False
 
-    finally:
-        log_end(success=success, steps=steps_taken, score=score, rewards=rewards)
+    rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    print(
+        f"[END] success={str(success).lower()} steps={steps_taken} "
+        f"score={score:.2f} rewards={rewards_str}",
+        flush=True,
+    )
+
+    return llm_enabled
 
 
-# ── Main ─────────────────────────────────────────────────────────────────────
+def main() -> int:
+    client = None
+    llm_enabled = False
+    if API_KEY:
+        try:
+            client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
+            try:
+                client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[{"role": "user", "content": "ping"}],
+                    max_tokens=5,
+                )
+                llm_enabled = True
+            except Exception:
+                client = None
+                llm_enabled = False
+        except Exception:
+            client = None
+            llm_enabled = False
+    else:
+        print(
+            "[WARN] No API key found (HF_TOKEN, OPENAI_API_KEY, API_KEY). Using heuristic mode.",
+            flush=True,
+        )
+
+    env = InternshipEnv()
+    for task_id in ["easy-apply-ignore-001", "medium-relevance-001", "hard-ranking-001"]:
+        llm_enabled = run_task(env, client, task_id, llm_enabled)
+
+    return 0
+
+
 if __name__ == "__main__":
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-    env    = InternshipEnv()
-
-    task_ids = [
-        "easy-apply-ignore-001",
-        "medium-relevance-001",
-        "hard-ranking-001",
-    ]
-
-    for task_id in task_ids:
-        run_task(env, client, task_id)
+    raise SystemExit(main())

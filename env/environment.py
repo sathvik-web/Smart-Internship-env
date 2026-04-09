@@ -1,13 +1,13 @@
 from __future__ import annotations
-from env.graders import easy_grader, medium_grader, hard_grader
+from env.models import Action
 from env.models import Observation
 from env.tasks import load_tasks
-from env.reward import compute_reward
 
 
 class InternshipEnv:
     def __init__(self):
         self.tasks = load_tasks()
+        self._tasks = self.tasks
         self.current_index = 0
         self.last_reward = 0.0
 
@@ -41,30 +41,17 @@ class InternshipEnv:
 
         return self._task_to_observation(self.tasks[self.current_index])
 
-    # ✅ UPDATED STEP (IMPORTANT FIX)
     def step(self, action):
+        if isinstance(action, dict):
+            action = Action.model_validate(action)
+
         task = self.tasks[self.current_index]
         progress_ratio = self.current_index / len(self.tasks)
 
-        # 🔹 Base reward from graders (MAIN LOGIC)
-        if task.difficulty == "easy":
-            base_reward = easy_grader(action)
+        if not callable(task.grader):
+            raise ValueError("Grader missing")
 
-        elif task.difficulty == "medium":
-            base_reward = medium_grader(action)
-
-        elif task.difficulty == "hard":
-            base_reward = hard_grader(action)
-
-        else:
-            base_reward = 0.0
-
-        # 🔹 Bonus shaping (optional but good)
-        reward_obj = compute_reward(action, task, progress_ratio)
-        shaping_bonus = float(reward_obj.total) * 0.2   # small influence
-
-        # 🔹 Final reward (weighted)
-        reward = min(1.0, base_reward * 0.8 + shaping_bonus)
+        reward = float(task.grader(action, task, progress_ratio))
 
         self.last_reward = reward
 

@@ -2,10 +2,7 @@ from __future__ import annotations
 
 import re
 
-
-class Reward:
-    def __init__(self, total: float, **kwargs):
-        self.total = float(max(0.0, min(1.0, total)))
+from env.models import Action, InternshipTask, Reward
 
 
 def _clamp(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
@@ -51,12 +48,11 @@ def _ranking_score(predicted_ranking: list[str], expected_ranking: list[str]) ->
     return _clamp(pairwise_correct / pairwise_total)
 
 
-def compute_reward(action, task, progress_ratio: float) -> Reward:
-    # ✅ SAFE ACCESS (dict + object)
-    decision = action.get("decision") if isinstance(action, dict) else action.decision
-    relevance_score = action.get("relevance_score") if isinstance(action, dict) else action.relevance_score
-    reasoning = action.get("reasoning", "") if isinstance(action, dict) else action.reasoning
-    ranking = action.get("ranking", []) if isinstance(action, dict) else action.ranking
+def compute_reward(action: Action, task: InternshipTask, progress_ratio: float) -> Reward:
+    decision = action.decision
+    relevance_score = action.relevance_score
+    reasoning = action.reasoning
+    ranking = action.ranking
 
     # ✅ DEFINE ALL COMPONENTS (THIS WAS MISSING)
     decision_score = 1.0 if decision == task.correct_decision else 0.0
@@ -102,4 +98,19 @@ def compute_reward(action, task, progress_ratio: float) -> Reward:
 
     total = _clamp(weighted_core + progress_bonus - penalty)
 
-    return Reward(total=total)
+    feedback = (
+        f"decision={decision_score:.2f}, score={score_closeness:.2f}, "
+        f"reasoning={reasoning_score:.2f}, ranking={ranking_score:.2f}, "
+        f"bonus={progress_bonus:.2f}, penalty={penalty:.2f}"
+    )
+
+    return Reward(
+        total=total,
+        decision_score=decision_score,
+        score_closeness=score_closeness,
+        reasoning_score=reasoning_score,
+        ranking_score=ranking_score,
+        progress_bonus=progress_bonus,
+        penalty=_clamp(penalty),
+        feedback=feedback,
+    )

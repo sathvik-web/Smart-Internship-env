@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from env.graders import easy_grader, hard_grader, medium_grader
 from env.models import InternshipOption, InternshipTask
 
 
@@ -16,6 +17,7 @@ def load_tasks() -> list[InternshipTask]:
         correct_decision="apply",
         true_score=0.74,
         expected_reasoning_keywords=["python", "backend"],
+        grader=easy_grader,
     )
 
     medium_task = InternshipTask(
@@ -29,6 +31,7 @@ def load_tasks() -> list[InternshipTask]:
         correct_decision="apply",
         true_score=0.61,
         expected_reasoning_keywords=["mlops", "docker"],
+        grader=medium_grader,
     )
 
     hard_task = InternshipTask(
@@ -55,6 +58,7 @@ def load_tasks() -> list[InternshipTask]:
             ),
         ],
         correct_ranking=["ML Intern", "Backend Intern"],
+        grader=hard_grader,
     )
 
     return [easy_task, medium_task, hard_task]

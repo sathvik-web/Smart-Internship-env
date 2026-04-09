@@ -19,10 +19,10 @@ def health():
 
 @app.post("/reset")
 @app.get("/reset")
-def reset():
+def reset(task: str = None):
     try:
-        observation = env.reset()
-        return {"observation": observation.model_dump(exclude={"grader"})}
+        observation = env.reset(task=task)
+        return {"observation": observation.model_dump()}
     except Exception as exc:
         return {"observation": None, "error": str(exc)}
 
@@ -30,10 +30,12 @@ def reset():
 @app.post("/step")
 def step(action: dict):
     try:
-        parsed_action = Action.model_validate(action)
-        observation, reward, done, info = env.step(parsed_action)
+        # Validate via Pydantic but pass raw dict to env.step()
+        # (graders and reward.py both use dict .get() access)
+        Action.model_validate(action)          # raises if invalid
+        observation, reward, done, info = env.step(action)
         return {
-            "observation": None if observation is None else observation.model_dump(exclude={"grader"}),
+            "observation": None if observation is None else observation.model_dump(),
             "reward": reward,
             "done": done,
             "info": info,

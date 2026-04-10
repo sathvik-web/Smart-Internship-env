@@ -178,15 +178,6 @@ openenv validate
 
 ---
 
-## Deployment Status
-
-* Hugging Face Space: ✅ Running
-* Docker: ✅ Working
-* OpenEnv Validation: ✅ Passed
-* Tasks with Graders: ✅ Verified (3/3)
-
----
-
 ## Outcome
 
 This project demonstrates a robust AI evaluation environment where agents are tested on realistic decision-making tasks involving classification, scoring, and ranking. It provides a structured framework for assessing agent performance using deterministic rewards and reproducible execution.

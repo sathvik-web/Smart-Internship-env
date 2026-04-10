@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from env.graders import easy_grader, hard_grader, medium_grader
+from env.graders import easy_grader, medium_grader, hard_grader
 from env.models import InternshipOption, InternshipTask
 
 
@@ -63,10 +63,10 @@ def load_tasks() -> list[InternshipTask]:
 
     tasks = [easy_task, medium_task, hard_task]
 
-    if len(tasks) != 3:
-        raise RuntimeError("load_tasks must return exactly 3 tasks")
+    print("TASKS COUNT:", len(tasks))
+    print("GRADER CHECK:", [callable(t.grader) for t in tasks])
 
-    if not all(callable(task.grader) for task in tasks):
-        raise RuntimeError("Every task must have a callable grader")
+    assert len(tasks) == 3
+    assert all(callable(t.grader) for t in tasks)
 
     return tasks

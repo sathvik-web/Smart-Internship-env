@@ -7,7 +7,7 @@ from env.tasks import load_tasks
 
 print("SERVER.APP LOADED")
 
-app = FastAPI(docs_url=None, redoc_url=None)
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 env = InternshipEnv()
 
 

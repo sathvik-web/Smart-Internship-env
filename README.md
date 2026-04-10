@@ -13,7 +13,7 @@ pinned: false
 
 ## Live Demo
 
-🔗 https://sathvik1890-smart-internship-env-final.hf.space
+🔗 https://sathvik1890-smart-internship-env.hf.space
 
 ---
 
@@ -89,10 +89,9 @@ Each task increases in complexity and evaluates different aspects of agent decis
 
 | Endpoint  | Method   | Description                 |
 | --------- | -------- | --------------------------- |
-| `/reset`  | GET/POST | Start a new task            |
+| `/reset`  | POST     | Start a new task            |
 | `/step`   | POST     | Execute agent action        |
 | `/tasks`  | GET      | List all tasks with graders |
-| `/state`  | GET/POST | Get environment state       |
 | `/health` | GET      | Health check                |
 
 ---
@@ -155,7 +154,7 @@ docker run -p 7860:7860 smart-internship-env
 
 The environment is deployed using Docker on Hugging Face Spaces.
 
-🔗 https://sathvik1890-smart-internship-env-final.hf.space
+🔗 https://sathvik1890-smart-internship-env.hf.space
 
 ---
 

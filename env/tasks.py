@@ -61,4 +61,12 @@ def load_tasks() -> list[InternshipTask]:
         grader=hard_grader,
     )
 
-    return [easy_task, medium_task, hard_task]
+    tasks = [easy_task, medium_task, hard_task]
+
+    if len(tasks) != 3:
+        raise RuntimeError("load_tasks must return exactly 3 tasks")
+
+    if not all(callable(task.grader) for task in tasks):
+        raise RuntimeError("Every task must have a callable grader")
+
+    return tasks
